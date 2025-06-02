@@ -20,9 +20,20 @@ RUN apt-get update && apt-get install -y wget gnupg && \
     dpkg -i elasticsearch-$ELASTIC_VERSION.deb && \
     rm elasticsearch-$ELASTIC_VERSION.deb
 
-# Configure Elasticsearch
-COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
+
+# Create non-root user and set permissions
+RUN chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
+
+# Set working directory and switch user
+WORKDIR /usr/share/elasticsearch
+USER elasticsearch
+
+# Add config
+COPY --chown=elasticsearch:elasticsearch elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
 
 EXPOSE 9200 9300
 VOLUME ["/usr/share/elasticsearch/data"]
-CMD ["/usr/share/elasticsearch/bin/elasticsearch"]
+
+ENV xpack.ml.enabled=false
+
+CMD ["bin/elasticsearch"]
